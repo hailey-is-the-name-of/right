@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <title>맞는 말 시리즈</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <script src="https://developers.kakao.com/sdk/js/kakao.js"></script>
+  <style>
+    :root {
+      --content-max-width: 1000px;
+      --content-width: 100%;
+      --progress-height: 16px;
+    }
+
+    /* 공통 레이아웃 */
+    body {
+      margin: 0;
+      padding: 40px 20px;
+      background: #fff;
+      font-family: 'Noto Sans KR', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative; /* 홈 버튼 절대 위치용 */
+    }
+    @media (max-width: 768px) {
+      body { padding: 20px 14px; }
+    }
+
+    /* 메인페이지로 돌아가기 버튼 */
+    .home-btn {
+      position: absolute;
+      top: 16px;    /* 살짝 더 위로 올려도 되고 */
+      left: 16px;
+      background: none;
+      color: #888;          /* 연한 회색 */
+      font-size: 12px;      /* 좀 더 작은 크기 */
+      padding: 4px 6px;     /* 여백도 작게 */
+      text-decoration: none;
+    }
+
+
+
+    /* 콘텐츠 컨테이너 */
+    #content-container {
+      width: var(--content-width);
+      max-width: var(--content-max-width);
+    }
+
+    /* 제목 */
+    h1 {
+      font-size: 20px;
+      margin: 32px 0 20px; /* 홈 버튼 아래로 내려오기 위해 상단 여유 줌 */
+      text-align: center;
+    }
+    @media (max-width: 768px) {
+      h1 { font-size: 18px; margin: 60px 0 12px; }
+    }
+
+    /* 이미지 뷰어 */
+    #image-wrapper {
+      position: relative;
+      height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+    }
+    @media (max-width: 768px) {
+      #image-wrapper { height: 60vh; }
+    }
+    #image-wrapper img {
+      position: absolute;
+      max-width: 100%;
+      max-height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transform: translate(-50%, -50%) scale(0.95);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      left: 50%; top: 50%;
+      border-radius: 16px;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+      background: #fff;
+    }
+    #image-wrapper img.active {
+      opacity: 1;
+      transform: translate(-50%, -50%) scale(1);
+      z-index: 1;
+    }
+
+    /* 탐색 버튼 */
+    .nav-buttons {
+      display: flex;
+      gap: 10px;
+      justify-content: center;
+      margin: 16px 0;
+    }
+    button {
+      background: #111;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      font-size: 16px;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    button:hover { background: #444; }
+    button:disabled { background: #ccc; cursor: default; }
+
+    /* 프로그레스바 */
+    #progress-area {
+      margin: 0 auto;
+    }
+    #progress-container {
+      width: 100%;
+      height: var(--progress-height);
+      background: #e0e0e0;
+      border-radius: calc(var(--progress-height) / 2);
+      overflow: hidden;
+    }
+    #progress-bar {
+      height: 100%;
+      width: 0;
+      background: linear-gradient(to right, #002BFF 0%, #3B03FF 50%, #00735C 100%);
+      transition: width 0.3s ease;
+    }
+    /* 진행 글씨 */
+    #progress-text {
+      text-align: center;
+      font-size: 14px;
+      color: #888;
+      margin-top: 4px;
+    }
+
+    /* 공유 버튼 */
+    .share-container {
+      text-align: center;
+      margin: 24px 0;
+    }
+    .share-btn {
+      background: #FEE500;
+      color: #000;
+      padding: 16px 26px;
+      border-radius: 25px;
+      font-size: 18px;
+      font-weight: bold;
+      text-decoration: none;
+      display: inline-block;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.2);
+      transition: transform 0.2s ease;
+      border: none;
+      cursor: pointer;
+    }
+    .share-btn:hover { transform: scale(1.05); box-shadow: 0 4px 10px rgba(0,0,0,0.3); }
+
+    /* 푸터 */
+    footer {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px 0;
+    }
+
+
+  /* 우상단 파란 삼각형 */
+body::before {
+  content: "";
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: 0;
+  height: 0;
+  border-left: 40px solid transparent;
+  border-bottom: 40px solid #002BFF;
+  z-index: 1000;
+  transform: rotate(-90deg);         /* 원하는 각도로 회전 */
+
+}
+
+/* 좌하단 빨간 삼각형 */
+body::after {
+  content: "";
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 0;
+  height: 0;
+  border-right: 40px solid transparent;
+  border-top: 40px solid #FF3B3B;
+  z-index: 1000;
+  transform: rotate(-90deg);         /* 원하는 각도로 회전 */
+
+}
+
+
+  
+  </style>
+</head>
+<body>
+  <!-- 1) 홈으로 돌아가기 -->
+  <a href="http://bluenew.life" class="home-btn">메인페이지로 돌아가기</a>
+
+  <div id="content-container">
+    <!-- 2) 제목 -->
+    <h1>맞는 말 시리즈</h1>
+
+    <!-- 3) 이미지 뷰어 -->
+    <div id="image-wrapper">
+      <img id="img1" src="" alt="">
+      <img id="img2" src="" alt="">
+    </div>
+
+    <!-- 4) 탐색 버튼 -->
+    <div class="nav-buttons">
+      <button id="prev-btn" disabled>← 이전</button>
+      <button id="next-btn">다음 →</button>
+    </div>
+
+    <!-- 5) 프로그레스바 -->
+    <div id="progress-area">
+      <div id="progress-container">
+        <div id="progress-bar"></div>
+      </div>
+      <div id="progress-text">총 0개 중 0번째</div>
+    </div>
+
+    <!-- 6) 공유 버튼 -->
+    <div class="share-container">
+      <button class="share-btn" onclick="shareToKakao()">카카오톡으로 공유하기</button>
+    </div>
+  </div>
+
+  <!-- 7) 푸터 -->
+  <footer>
+    <a href="https://theminjoodaegu.co.kr/">
+      <img src="150_png_dgsd_logo.png" width="150" alt="더불어민주당 대구광역시당 로고">
+    </a>
+  </footer>
+
+  <script>
+    Kakao.init('37ea916b7f1ab457b58119c60ec405a');
+    const totalImages = 20;
+    const imageOrder = Array.from({length: totalImages}, (_, i) => totalImages - i);
+    let currentIndex = 0, currentVisible = 0;
+    const images = [document.getElementById('img1'), document.getElementById('img2')];
+    const progressBar = document.getElementById('progress-bar');
+    const progressText = document.getElementById('progress-text');
+
+    function showImage() {
+      const num = imageOrder[currentIndex];
+      const next = 1 - currentVisible;
+      const curr = images[currentVisible], nextImg = images[next];
+      nextImg.src = `images/${num}.jpg`;
+      nextImg.onload = () => {
+        nextImg.classList.add('active');
+        curr.classList.remove('active');
+        currentVisible = next;
+      };
+      document.getElementById('prev-btn').disabled = currentIndex === 0;
+      document.getElementById('next-btn').disabled = currentIndex === totalImages - 1;
+      const seen = currentIndex + 1;
+      progressBar.style.width = (seen / totalImages * 100) + '%';
+      progressText.textContent = `총 ${totalImages}개 중 ${seen}번째`;
+    }
+
+    document.getElementById('prev-btn').onclick = () => { if (currentIndex>0) currentIndex--, showImage() };
+    document.getElementById('next-btn').onclick = () => { if (currentIndex<totalImages-1) currentIndex++, showImage() };
+
+    function shareToKakao() {
+      const num = imageOrder[currentIndex];
+      const shareUrl = `https://bluenew.life/share/${num}.html`;
+      const imageUrl = `https://bluenew.life/card/images/${num}.jpg`;
+      Kakao.Link.sendDefault({
+        objectType: 'feed',
+        content: {
+          title: '이재명의 말을 들어보세요!',
+          description: '#이재명 말모이 모음 페이지',
+          imageUrl,
+          link: { mobileWebUrl: shareUrl, webUrl: shareUrl }
+        }
+      });
+    }
+
+    // 초기 표시
+    showImage();
+  </script>
+</body>
+</html>
