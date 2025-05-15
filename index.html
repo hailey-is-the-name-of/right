@@ -241,8 +241,12 @@ body::after {
   <script>
     Kakao.init('37ea916b7f1ab457b58119c60ec4052a');
     const totalImages = 20;
-    const imageOrder = Array.from({length: totalImages}, (_, i) => totalImages - i);
-    let currentIndex = 0, currentVisible = 0;
+const imageOrder = Array.from({ length: totalImages }, (_, i) => i + 1);
+const params = new URLSearchParams(window.location.search);
+const startImg = parseInt(params.get('img') || '1', 10);
+let currentIndex = Math.max(0, Math.min(startImg - 1, totalImages - 1));
+let currentVisible = 0;
+
     const images = [document.getElementById('img1'), document.getElementById('img2')];
     const progressBar = document.getElementById('progress-bar');
     const progressText = document.getElementById('progress-text');
