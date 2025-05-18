@@ -6,7 +6,7 @@ name: Auto-generate share pages
 on:
   push:
     paths:
-      - 'right/images/**'
+      - 'images/**'
   workflow_dispatch:
 
 jobs:
