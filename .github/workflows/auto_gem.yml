@@ -1,0 +1,39 @@
+# .github/workflows/auto_gen.yml
+name: Auto-generate share pages
+
+# images 디렉토리에 푸시되거나
+# 수동으로도 실행할 수 있게 설정
+on:
+  push:
+    paths:
+      - 'right/images/**'
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1) 코드 내려받기
+      - uses: actions/checkout@v3
+
+      # 2) Python 설치
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      # 3) 의존성 설치
+      - name: Install dependencies
+        run: pip install jinja2
+
+      # 4) share 페이지 & index.html 업데이트
+      - name: Generate share pages & update index
+        run: python scripts/gen_share.py
+
+      # 5) 변경사항 커밋 & 푸시
+      - name: Commit & push changes
+        uses: stefanzweifel/git-auto-commit-action@v4
+        with:
+          commit_message: "ci: 자동으로 /right share 페이지 및 index 업데이트"
+          branch: main
